@@ -18,7 +18,7 @@ def file_sha256(file: Path):
 
 def ucode_patch_name(patch: Path) -> str:
     # Format should be:
-    # cpuid<cpuid>_rev<revision>_date<yyyymmdd>_enc<ee>.bin
+    # family<family>_cpuid<cpuid>_rev<revision>_date<yyyymmdd>_enc<ee>.bin
     ucodepatch = ucode_patch_parse(patch)
     name = f"family{ucodepatch.header.cpu_family:02x}_cpuid{ucodepatch.header.cpuid_str}_rev{ucodepatch.header.update_revision:08x}_date{ucodepatch.header.year:04}{ucodepatch.header.month:02}{ucodepatch.header.day:02}"
     if ucodepatch.verified_header is not None:
