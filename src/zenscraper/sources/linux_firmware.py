@@ -69,9 +69,12 @@ def linux_firmware_scrape(console: Console, workdir: Path, outdir: Path):
     console.log("Scraping the Linux firmware repository...")
     repo = _clone_repo(console, cachedir)
 
-    console.log("Checkout main and ensure we are up to date...")
-    repo.git.checkout("main")
-    repo.git.pull()
+    console.log("Force-sync linux-firmware repo to origin/main (discarding local changes)...")
+    repo.git.checkout("main", force=True)
+    repo.git.reset("--hard")
+    repo.git.clean("-fd")
+    repo.git.fetch("origin", "main")
+    repo.git.reset("--hard", "origin/main")
 
     console.log("Obtaining the git history for amd-ucode files...")
     commits = _get_amd_ucode_commits(repo)
