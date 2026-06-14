@@ -6,8 +6,8 @@ A command line tool to print information about an AMD uCode patch files.
 import argparse
 from pathlib import Path
 from rich.console import Console
-from zenscraper.sources.linux_firmware import linux_firmware_scrape
-from zenscraper.sources.platomav_cpumicrocodes import platomav_cpumicrocodes_scrape
+from zenscraper.sources.linux_firmware_source import LinuxFirmwareSource
+from zenscraper.sources.platomav_cpumicrocodes_source import PlatomavCpumicrocodesSource
 
 BANNER = r'''
   ______           _____                                
@@ -30,8 +30,13 @@ def main():
     console = Console()
     console.print(BANNER, highlight=False)
 
-    linux_firmware_scrape(console, args.workdir, args.outdir)
-    platomav_cpumicrocodes_scrape(console, args.workdir, args.outdir)
+    sources = [
+        LinuxFirmwareSource(),
+        PlatomavCpumicrocodesSource(),
+    ]
+
+    for s in sources:
+        s.scrape(console, args.workdir, args.outdir)
 
     patchnum = len(list((args.outdir / "patches").glob("*.bin")))
     console.log(f"Now you have {patchnum} uCode patches to deal with!")
