@@ -9,7 +9,7 @@ from git import Repo, Commit
 from pathlib import Path
 from rich.console import Console
 from amd_ucode_container.extract import container_extract
-from ..helpers import ucode_patch_process
+from zenscraper.helpers import ucode_patch_process
 
 REPO_URL = "https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git"
 

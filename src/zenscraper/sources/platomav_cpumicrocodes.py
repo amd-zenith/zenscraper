@@ -8,7 +8,7 @@ import shutil
 from git import Repo, Commit
 from pathlib import Path
 from rich.console import Console
-from ..helpers import ucode_patch_process
+from zenscraper.helpers import ucode_patch_process
 
 REPO_URL = "https://github.com/platomav/CPUMicrocodes.git"
 
