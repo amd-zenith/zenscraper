@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# SPDX-License-Identifier: GPL-2.0-or-later
 
 from pathlib import Path
 from zenscraper.utils.sha256 import file_sha256
