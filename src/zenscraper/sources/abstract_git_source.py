@@ -4,7 +4,7 @@ import shutil
 from abc import abstractmethod
 from pathlib import Path
 from zenscraper.sources.abstract_source import AbstractSource
-from git import Repo, Commit
+from git import Repo, Commit, InvalidGitRepositoryError
 from rich.console import Console
 
 class AbstractGitSource(AbstractSource):
@@ -63,7 +63,7 @@ class AbstractGitSource(AbstractSource):
         try:
             repo = Repo(repo_dir)
             console.log(f"The {self.source_name} repo was already cloned!")
-        except git.InvalidGitRepositoryError:
+        except InvalidGitRepositoryError:
             console.log(f"Cloning {self.source_name} repo...")
             repo = Repo.clone_from(self.repo_url, repo_dir)
         # Return a valid repo object
