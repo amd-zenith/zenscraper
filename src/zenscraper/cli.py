@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 '''
-A command line tool to print information about an AMD uCode patch files.
+A command line tool to collect AMD uCode patch files.
 '''
 
 import argparse
