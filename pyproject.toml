@@ -36,7 +36,7 @@ classifiers = [
 dependencies = [
   "rich==15.0.0",
   "amd-ucode-container==1.0.2",
-  "amd-ucode-patch==1.0.0",
+  "amd-ucode-patch==1.0.1",
   "GitPython==3.1.50",
 ]
 
