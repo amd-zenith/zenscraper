@@ -12,7 +12,5 @@ def ucode_patch_name(patch: Path) -> str:
     # family<family>_cpuid<cpuid>_rev<revision>_date<yyyymmdd>_enc<ee>_sha<hash12>.bin
     ucodepatch = ucode_patch_parse(patch)
     short_hash = file_sha256(patch)[:12]
-    name = patch_name(ucodepatch).split(".bin")[0]
-    name += f"_sha{short_hash}"
-    name += ".bin"
+    name = patch_name(ucodepatch)
     return name
