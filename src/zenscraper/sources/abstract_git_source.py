@@ -4,6 +4,7 @@
 import shutil
 from abc import abstractmethod
 from pathlib import Path
+from zenscraper.catalog import Catalog, intern
 from zenscraper.sources.abstract_source import AbstractSource
 from git import Repo, Commit, InvalidGitRepositoryError
 from rich.console import Console
@@ -30,14 +31,15 @@ class AbstractGitSource(AbstractSource):
         raise NotImplementedError()
 
     @abstractmethod
-    def _scrape_commit(self, console: Console, repo_dir: Path, collectdir: Path, commit: Commit):
+    def _scrape_commit(self, console: Console, repo_dir: Path, commitdir: Path, commit: Commit):
         '''
-        Scrape the repo_dir for the given commit and store the relevant files in collectdir.
+        Scrape the repo_dir for the given commit and store the relevant files in
+        commitdir, which is the collection folder set aside for this commit.
         '''
         raise NotImplementedError()
 
     @abstractmethod
-    def _scrape_collection(self, console: Console, collectdir: Path, outdir: Path):
+    def _scrape_collection(self, console: Console, collectdir: Path, outdir: Path, catalog: Catalog):
         '''
         Process the files in collectdir and store the relevant uCode patches in outdir.
         Return the number of uCode patches processed.
@@ -85,11 +87,41 @@ class AbstractGitSource(AbstractSource):
         console.log(f"Found {len(commits)} relevant commits!")
         return commits
 
-    def _scrape(self, console: Console, cachedir: Path, tmpdir: Path, outdir: Path):
+    def _commit_dir(self, collectdir: Path, commit: Commit) -> Path:
+        '''
+        The folder a commit's files are collected under. Naming it after the
+        commit is what lets a collected file be traced back to the commit it
+        came from once the whole history has been walked.
+        '''
+        return collectdir / commit.hexsha
+
+    def _locate(self, collectdir: Path, path: Path) -> tuple[str, str, str]:
+        '''
+        Trace a collected file back to where it came from: the commit that
+        carried it, that commit's date, and the path it has in the repo.
+        '''
+        commit_dir, *rest = path.relative_to(collectdir).parts
+        # The files of a commit are collected from the watched path of the repo,
+        # which their collected paths are relative to.
+        repo_path = "/".join([self.repo_path.strip("/"), *rest])
+        return intern(commit_dir), intern(self._commit_dates[commit_dir]), intern(repo_path)
+
+    def _scrape(self, console: Console, cachedir: Path, tmpdir: Path, outdir: Path, catalog: Catalog):
         repo_dir = cachedir / self._repo_folder()
         repo = self._clone_repo(console, repo_dir)
         self._force_sync(console, repo)
+        head = repo.head.commit.hexsha
         commits = self._get_commits(console, repo)
+        catalog.record_source(
+            self.source_id,
+            name=self.source_name,
+            repo_url=self.repo_url,
+            branch=self.repo_branch,
+            path=self.repo_path,
+            head=head,
+            commits_walked=len(commits),
+        )
+        self._commit_dates = {c.hexsha: c.committed_datetime.isoformat() for c in commits}
         collectdir = tmpdir / self._repo_folder()
         if collectdir.exists():
             shutil.rmtree(collectdir)
@@ -97,8 +129,10 @@ class AbstractGitSource(AbstractSource):
         for commit in commits:
             console.log(f"Fetching commit {commit.hexsha}...")
             repo.git.checkout(commit.hexsha, force=True)
-            self._scrape_commit(console, repo_dir, collectdir, commit)
-        patchnum = self._scrape_collection(console, collectdir, outdir)
+            commitdir = self._commit_dir(collectdir, commit)
+            commitdir.mkdir(parents=True, exist_ok=True)
+            self._scrape_commit(console, repo_dir, commitdir, commit)
+        patchnum = self._scrape_collection(console, collectdir, outdir, catalog)
         if collectdir.exists():
             shutil.rmtree(collectdir)
         return patchnum

@@ -7,6 +7,7 @@ A command line tool to collect AMD uCode patch files.
 import argparse
 from pathlib import Path
 from rich.console import Console
+from zenscraper.catalog import Catalog
 from zenscraper.sources.linux_firmware_source import LinuxFirmwareSource
 from zenscraper.sources.platomav_cpumicrocodes_source import PlatomavCpumicrocodesSource
 from zenscraper.utils.naming import normalize_patch_names
@@ -37,15 +38,28 @@ def main():
         PlatomavCpumicrocodesSource(),
     ]
 
-    fixed = normalize_patch_names(console, args.outdir)
+    # Provenance is observed rather than computed, so a run adds to the record
+    # earlier runs built up instead of starting it over.
+    catalog_path = args.outdir / "catalog.json"
+    catalog = Catalog.load(catalog_path)
+    if catalog.patch_count:
+        console.log(f"Picked up a provenance catalog of {catalog.patch_count} uCode patches!")
+
+    fixed = normalize_patch_names(console, args.outdir, catalog)
     if fixed:
         console.log(f"Brought {fixed} stored uCode patches up to the current naming standard!")
 
     for s in sources:
-        s.scrape(console, args.workdir, args.outdir)
+        s.scrape(console, args.workdir, args.outdir, catalog)
+
+    # Patches stored by an earlier run that no source claimed this time are
+    # still part of the collection, so the catalog accounts for them too.
+    catalog.sweep(console, args.outdir / "patches")
+    catalog.save(catalog_path)
 
     patchnum = len(list((args.outdir / "patches").glob("*.bin")))
     console.log(f"Now you have {patchnum} uCode patches to deal with!")
+    console.log(f"Their provenance catalog records {catalog.sighting_count} sightings upstream!")
 
 
 if __name__ == "__main__":

@@ -11,6 +11,7 @@ import re
 from pathlib import Path
 from rich.console import Console
 from amd_ucode_patch.structures.patch import Patch
+from zenscraper.catalog import Catalog
 from zenscraper.utils.sha256 import file_sha256
 
 # Names this tool has given to collected patches. The current standard always
@@ -46,12 +47,17 @@ def _outdated_patches(console: Console, patchesdir: Path) -> list[tuple[Path, st
     return outdated
 
 
-def normalize_patch_names(console: Console, outdir: Path) -> int:
+def normalize_patch_names(console: Console, outdir: Path, catalog: Catalog) -> int:
     '''
     Rename every uCode patch in outdir that does not conform to the current
     naming standard. A patch whose name is already taken by an identical patch
     is a leftover duplicate and gets dropped.
     Return the number of patches that were not conforming.
+
+    The catalog keys what it knows about a patch by the name the patch is stored
+    under, so every rename is passed on to it. Otherwise renaming would strand
+    the provenance recorded under the old name, and a dropped duplicate would
+    take everything recorded about it with it.
     '''
     patchesdir = outdir / "patches"
     if not patchesdir.is_dir():
@@ -80,11 +86,13 @@ def normalize_patch_names(console: Console, outdir: Path) -> int:
                     raise Exception(f"{name} already exists and has a different hash!")
                 console.log(f"Dropping {patch.name}, {name} already holds the same patch")
                 patch.unlink()
+                catalog.rename_patch(patch.name, name)
                 fixed += 1
                 continue
 
             console.log(f"Renaming {patch.name} to {name}")
             patch.replace(dst)
+            catalog.rename_patch(patch.name, name)
             fixed += 1
 
         if len(deferred) == len(pending):
