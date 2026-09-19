@@ -9,6 +9,7 @@ from pathlib import Path
 from rich.console import Console
 from zenscraper.sources.linux_firmware_source import LinuxFirmwareSource
 from zenscraper.sources.platomav_cpumicrocodes_source import PlatomavCpumicrocodesSource
+from zenscraper.utils.naming import normalize_patch_names
 
 BANNER = r'''
   ______           _____                                
@@ -35,6 +36,10 @@ def main():
         LinuxFirmwareSource(),
         PlatomavCpumicrocodesSource(),
     ]
+
+    fixed = normalize_patch_names(console, args.outdir)
+    if fixed:
+        console.log(f"Brought {fixed} stored uCode patches up to the current naming standard!")
 
     for s in sources:
         s.scrape(console, args.workdir, args.outdir)
