@@ -4,9 +4,9 @@
 import shutil
 from pathlib import Path
 from abc import ABC, abstractmethod
-from zenscraper.utils.patch import ucode_patch_name
 from zenscraper.utils.sha256 import file_sha256
 from rich.console import Console
+from amd_ucode_patch.structures.patch import Patch
 
 
 class AbstractSource(ABC):
@@ -24,16 +24,17 @@ class AbstractSource(ABC):
         '''
         raise NotImplementedError()
 
-    def process_ucode_patch(self, patch: Path, outdir: Path):
-        name = ucode_patch_name(patch)
+    def process_ucode_patch(self, path: Path, outdir: Path):
+        patch = Patch.from_file(path)
+        name = patch.name_canonical
         patchesdir = outdir / "patches"
         patchesdir.mkdir(parents=True, exist_ok=True)
         dst = patchesdir / name
-        hash = file_sha256(patch)
+        hash = patch.sha256
         if dst.exists() and file_sha256(dst) != hash:
             raise Exception(f"{name} already exists and has a different hash!")
         else:
-            shutil.copy(patch, dst)
+            shutil.copy(path, dst)
 
     def scrape(self, console: Console, workdir: Path, outdir: Path):
         cachedir = workdir / "cache"
