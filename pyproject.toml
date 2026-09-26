@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling==1.32.3", "hatch-vcs==0.5.0"]
+requires = ["hatchling==1.32.4", "hatch-vcs==0.5.0"]
 build-backend = "hatchling.build"
 
 [project]
@@ -36,7 +36,7 @@ classifiers = [
 dependencies = [
   "rich==15.0.0",
   "amd-ucode-container==1.0.2",
-  "amd-ucode-patch==2.1.0",
+  "amd-ucode-patch==2.1.2",
   "GitPython==3.1.62",
 ]
 
