@@ -37,7 +37,7 @@ dependencies = [
   "rich==15.0.0",
   "amd-ucode-container==1.0.2",
   "amd-ucode-patch==2.1.4",
-  "GitPython==3.2.0",
+  "GitPython==3.2.1",
 ]
 
 [project.urls]
